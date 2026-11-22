@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#111827">
+<link rel="manifest" href="manifest.json">
+<title>Scripture Library</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1220;--panel:#151f30;--muted:#9aa8bd;--accent:#76a9fa}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f3f6fb;font:16px system-ui,sans-serif}
+header{padding:22px 18px;background:#111b2b;border-bottom:1px solid #26354b}
+h1{margin:0;font-size:1.45rem}header p{margin:6px 0 0;color:var(--muted);font-size:.9rem}
+main{max-width:850px;margin:auto;padding:16px}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+button,select,input,textarea{font:inherit;border-radius:10px;border:1px solid #34445d;background:#1a2639;color:#f3f6fb;padding:10px}
+button{cursor:pointer}button.active,.primary{background:#285a9e;border-color:#3977c7}
+.panel{background:var(--panel);border:1px solid #27364c;border-radius:14px;padding:16px;margin-bottom:14px}
+label{display:block;color:var(--muted);font-size:.9rem;margin:12px 0 6px}
+select,input,textarea{width:100%}textarea{min-height:110px;resize:vertical}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.muted{color:var(--muted);font-size:.9rem}
+.list{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;margin-top:12px}
+.book{width:100%;text-align:left}.hidden{display:none}.note{padding:10px;border-bottom:1px solid #34445d}
+footer{color:var(--muted);font-size:.8rem;text-align:center;padding:16px}
+@media(max-width:520px){.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><h1>Scripture Library</h1><p id="subtitle">Biblia • Könyvtár • Jegyzetek</p></header>
+<main>
+<div class="tabs">
+<button class="active" data-tab="bible">Biblia</button><button data-tab="library">Könyvtár</button><button data-tab="notes">Jegyzetek</button><button data-tab="search">Keresés</button>
+<select id="language" style="width:auto;margin-left:auto"><option value="hu">Magyar</option><option value="en">English</option></select>
+</div>
+<section id="bible" class="panel">
+<h2 id="bibleTitle">Biblia</h2>
+<div class="row"><div><label for="book">Könyv</label><select id="book"></select></div><div><label for="chapter">Fejezet</label><select id="chapter"></select></div></div>
+<p class="muted" id="translation">Választott fordítás: Új világ fordítás</p>
+<p class="muted">A teljes bibliai szöveg nincs beépítve. Válaszd ki a könyvet és a fejezetet, majd olvasd a jogszerűen elérhető kiadásban.</p>
+<button class="primary" id="bookmark">☆ Könyvjelző hozzáadása</button>
+<div id="bookmarks" class="muted"></div>
+</section>
+<section id="library" class="panel hidden"><h2>Könyvtár</h2><p>Tanulmányozási anyagok és személyes gyűjtemény.</p><div class="list"><div class="panel">Kiadványok</div><div class="panel">Videók</div><div class="panel">Hanganyagok</div><div class="panel">Tanulmányozás</div></div><p class="muted">Saját fájlokat később adhatsz hozzá.</p></section>
+<section id="notes" class="panel hidden"><h2>Jegyzetek</h2><label for="noteTitle">Cím</label><input id="noteTitle" placeholder="Például: Tanulmányozási gondolat"><label for="noteText">Jegyzet</label><textarea id="noteText" placeholder="Írd ide a gondolataidat..."></textarea><button class="primary" id="saveNote">Mentés</button><div id="noteList"></div></section>
+<section id="search" class="panel hidden"><h2>Keresés</h2><label for="query">Keresés a könyvek és saját jegyzetek között</label><input id="query" placeholder="Keresési kifejezés"><div id="results"></div></section>
+</main><footer>A jegyzetek és könyvjelzők ezen az eszközön, a böngésző tárhelyén tárolódnak.</footer>
+<script>
+const booksHU=["1Mózes","2Mózes","3Mózes","4Mózes","5Mózes","Józsué","Bírák","Ruth","1Sámuel","2Sámuel","1Királyok","2Királyok","1Krónikák","2Krónikák","Ezsdrás","Nehémiás","Eszter","Jób","Zsoltárok","Példabeszédek","Prédikátor","Énekek éneke","Ézsaiás","Jeremiás","Jeremiás siralmai","Ezékiel","Dániel","Hóseás","Jóel","Ámósz","Abdiás","Jónás","Mikeás","Náhum","Habakuk","Sofóniás","Aggeus","Zakariás","Malakiás","Máté","Márk","Lukács","János","Apostolok cselekedetei","Róma","1Korintusz","2Korintusz","Galácia","Efézus","Filippi","Kolosszé","1Tesszalonika","2Tesszalonika","1Timóteusz","2Timóteusz","Titusz","Filemon","Héberek","Jakab","1Péter","2Péter","1János","2János","3János","Júdás","Jelenések"];
+const counts=[50,40,27,36,34,24,21,4,31,24,22,25,29,36,10,13,10,42,150,31,12,8,66,52,5,48,12,14,3,9,1,4,7,3,3,3,2,14,4,28,16,24,21,28,16,16,13,6,6,4,4,5,3,6,4,3,1,13,5,5,3,5,1,1,1,22];
+const booksEN=["Genesis","Exodus","Leviticus","Numbers","Deuteronomy","Joshua","Judges","Ruth","1 Samuel","2 Samuel","1 Kings","2 Kings","1 Chronicles","2 Chronicles","Ezra","Nehemiah","Esther","Job","Psalms","Proverbs","Ecclesiastes","Song of Solomon","Isaiah","Jeremiah","Lamentations","Ezekiel","Daniel","Hosea","Joel","Amos","Obadiah","Jonah","Micah","Nahum","Habakkuk","Zephaniah","Haggai","Zechariah","Malachi","Matthew","Mark","Luke","John","Acts","Romans","1 Corinthians","2 Corinthians","Galatians","Ephesians","Philippians","Colossians","1 Thessalonians","2 Thessalonians","1 Timothy","2 Timothy","Titus","Philemon","Hebrews","James","1 Peter","2 Peter","1 John","2 John","3 John","Jude","Revelation"];
+let lang="hu";const $=id=>document.getElementById(id);
+function fillBooks(){ $("book").innerHTML=(lang==="hu"?booksHU:booksEN).map((b,i)=>`<option value="${i}">${b}</option>`).join("");fillChapters()}
+function fillChapters(){let n=counts[+$("book").value||0];$("chapter").innerHTML=Array.from({length:n},(_,i)=>`<option>${i+1}</option>`).join("")}
+$("book").onchange=fillChapters;
+document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-tab]").forEach(x=>x.classList.toggle("active",x===b));["bible","library","notes","search"].forEach(id=>$(id).classList.toggle("hidden",id!==b.dataset.tab));});
+$("language").onchange=e=>{lang=e.target.value;fillBooks();$("subtitle").textContent=lang==="hu"?"Biblia • Könyvtár • Jegyzetek":"Bible • Library • Notes";$("bibleTitle").textContent=lang==="hu"?"Biblia":"Bible";};
+function getMarks(){return JSON.parse(localStorage.getItem("sl_marks")||"[]")}
+function renderMarks(){$("bookmarks").innerHTML=getMarks().map(x=>`<div class="note">${x}</div>`).join("")}
+$("bookmark").onclick=()=>{let name=(lang==="hu"?booksHU:booksEN)[+$("book").value]+" "+$("chapter").value;let m=getMarks();if(!m.includes(name))m.push(name);localStorage.setItem("sl_marks",JSON.stringify(m));renderMarks()};
+function getNotes(){return JSON.parse(localStorage.getItem("sl_notes")||"[]")}
+function renderNotes(){$("noteList").innerHTML=getNotes().map((n,i)=>`<div class="note"><b>${esc(n.title)}</b><p>${esc(n.text)}</p><button onclick="delNote(${i})">Törlés</button></div>`).join("")}
+function esc(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+$("saveNote").onclick=()=>{let title=$("noteTitle").value.trim(),text=$("noteText").value.trim();if(!text)return;let n=getNotes();n.unshift({title:title||"Jegyzet",text});localStorage.setItem("sl_notes",JSON.stringify(n));$("noteTitle").value="";$("noteText").value="";renderNotes()};
+window.delNote=i=>{let n=getNotes();n.splice(i,1);localStorage.setItem("sl_notes",JSON.stringify(n));renderNotes()};
+$("query").oninput=()=>{let q=$("query").value.toLowerCase();let hits=(lang==="hu"?booksHU:booksEN).filter(x=>x.toLowerCase().includes(q));let notes=getNotes().filter(x=>(x.title+" "+x.text).toLowerCase().includes(q));$("results").innerHTML=hits.map(x=>`<div class="note">${esc(x)}</div>`).join("")+notes.map(x=>`<div class="note"><b>${esc(x.title)}</b><p>${esc(x.text)}</p></div>`).join("")};
+fillBooks();renderMarks();renderNotes();
+if("serviceWorker" in navigator && location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script></body></html>
